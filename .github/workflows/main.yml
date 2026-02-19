@@ -2,8 +2,7 @@ name: Cruise AutoTest
 
 on:
   schedule:
-    # Запуск в 15 минут каждого часа, чтобы не пересекаться с ЖД
-    - cron: '15 * * * *'
+    - cron: '0 * * * *' 
   workflow_dispatch:
     inputs:
       user_chat_id:
@@ -18,27 +17,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Cypress run
+      - name: Run Cypress Tests
         id: cypress
         uses: cypress-io/github-action@v6
         with:
-          # Работаем из корня, так как package.json на верхнем уровне
-          working-directory: . 
-          # ИСПРАВЛЕНО: путь к файлу теста именно для КРУИЗОВ
-          spec: cypress/e2e/monitoring/cruise.cy.js 
+          # Укажите актуальный путь к вашему тесту для круизов
+          spec: cypress/e2e/monitoring/cruise.cy.js
           browser: chrome
         env:
-          # Секреты для авторизации
-          CYPRESS_LOGIN_EMAIL: ${{ secrets.LOGIN_EMAIL }}
-          CYPRESS_LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
+          LOGIN_EMAIL: ${{ secrets.LOGIN_EMAIL }}
+          LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
 
       - name: Extract Results
         id: extract_results
-        if: always() 
+        if: always()
         run: |
-          # Проверяем наличие файла с количеством найденных круизов
-          if [ -f "offers_count.txt" ]; then
-            COUNT=$(cat "offers_count.txt")
+          if [ -f offers_count.txt ]; then
+            COUNT=$(cat offers_count.txt)
             echo "count=$COUNT" >> $GITHUB_OUTPUT
           else
             echo "count=0" >> $GITHUB_OUTPUT
@@ -59,5 +54,5 @@ jobs:
             
             🚢 **Cruise Search Result**
             **Status:** ${{ steps.cypress.outcome == 'success' && '✅ Success' || '❌ Error' }}
-            **Cruises Found:** ${{ steps.extract_results.outputs.count }}
-            **Mode:** ${{ github.event_name == 'schedule' && 'Scheduled ⏰' || 'Manual 🔘' }}
+            **Offers Found:** ${{ steps.extract_results.outputs.count || '0' }}
+            **Mode:** ${{ github.event_name == 'schedule' && 'Hourly ⏰' || 'Manual 🔘' }}
