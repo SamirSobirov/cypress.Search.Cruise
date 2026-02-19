@@ -1,8 +1,8 @@
-name: Cruise AutoTest
+name: AutoTest Search Cruise
 
 on:
   schedule:
-    - cron: '0 * * * *' 
+    - cron: '0 * * * *'
   workflow_dispatch:
     inputs:
       user_chat_id:
@@ -13,32 +13,30 @@ on:
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
-    # ВАЖНО: Указываем корневую папку проекта для всей джобы
-    defaults:
-      run:
-        working-directory: cypress.Search.Cruise
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Cypress Tests
+      - name: Cypress run
         id: cypress
         uses: cypress-io/github-action@v6
         with:
-          # Указываем путь к папке с cypress.config.js относительно working-directory
+          # Указываем папку проекта, чтобы не было ошибки "Missing lockfile"
+          working-directory: cypress.Search.Cruise
           project: ./cypress.Search.Cruise
           spec: cypress/e2e/monitoring/cruise.cy.js
           browser: chrome
         env:
           LOGIN_EMAIL: ${{ secrets.LOGIN_EMAIL }}
           LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
+        # Убираем continue-on-error, чтобы статус Error в боте был правдивым
+        continue-on-error: false 
 
       - name: Extract Results
         id: extract_results
         if: always()
         run: |
-          # Ищем файл в текущей директории и подпапках
+          # Умный поиск: ищем файл offers_count.txt, где бы он ни лежал
           FILE=$(find . -name "offers_count.txt" | head -n 1)
           if [ -n "$FILE" ] && [ -f "$FILE" ]; then
             COUNT=$(cat "$FILE")
@@ -63,4 +61,4 @@ jobs:
             🚢 **Cruise Search Result**
             **Status:** ${{ steps.cypress.outcome == 'success' && '✅ Success' || '❌ Error' }}
             **Offers Found:** ${{ steps.extract_results.outputs.count || '0' }}
-            **Mode:** ${{ github.event_name == 'schedule' && 'Hourly ⏰' || 'Manual 🔘' }}
+            **Time:** ${{ github.event_name == 'schedule' && 'Hourly ⏰' || 'Manual 🔘' }}
