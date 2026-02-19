@@ -21,28 +21,25 @@ jobs:
         id: cypress
         uses: cypress-io/github-action@v6
         with:
-          # Указываем папку проекта, чтобы не было ошибки "Missing lockfile"
-          working-directory: cypress.Search.Cruise
-          project: ./cypress.Search.Cruise
-          spec: cypress/e2e/monitoring/cruise.cy.js
-          browser: chrome
+          # Указываем путь к файлу теста. 
+          # Если файл лежит в папке cypress.Search.Cruise, путь должен быть таким:
+          spec: cypress.Search.Cruise/cypress/e2e/monitoring/cruise.cy.js
         env:
           LOGIN_EMAIL: ${{ secrets.LOGIN_EMAIL }}
           LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
-        # Убираем continue-on-error, чтобы статус Error в боте был правдивым
-        continue-on-error: false 
+        # Оставляем как в Авиа, чтобы бот всегда отправлял отчет
+        continue-on-error: true
 
-      - name: Extract Results
-        id: extract_results
+      - name: Read Offers Count
         if: always()
         run: |
-          # Умный поиск: ищем файл offers_count.txt, где бы он ни лежал
+          # Ищем файл offers_count.txt по всему репозиторию
           FILE=$(find . -name "offers_count.txt" | head -n 1)
           if [ -n "$FILE" ] && [ -f "$FILE" ]; then
-            COUNT=$(cat "$FILE")
-            echo "count=$COUNT" >> $GITHUB_OUTPUT
+            VALUE=$(cat "$FILE")
+            echo "OFFERS_COUNT=$VALUE" >> $GITHUB_ENV
           else
-            echo "count=0" >> $GITHUB_OUTPUT
+            echo "OFFERS_COUNT=0" >> $GITHUB_ENV
           fi
 
       - name: Send Telegram Notification
@@ -60,5 +57,5 @@ jobs:
             
             🚢 **Cruise Search Result**
             **Status:** ${{ steps.cypress.outcome == 'success' && '✅ Success' || '❌ Error' }}
-            **Offers Found:** ${{ steps.extract_results.outputs.count || '0' }}
-            **Time:** ${{ github.event_name == 'schedule' && 'Hourly ⏰' || 'Manual 🔘' }}
+            **Offers Found:** ${{ env.OFFERS_COUNT || '0' }}
+            **Time:** ${{ github.event_name == 'schedule' && 'Hourly Testing ⏰' || 'Manual Testing 🔘' }}
