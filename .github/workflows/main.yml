@@ -13,6 +13,11 @@ on:
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
+    # ВАЖНО: Указываем корневую папку проекта для всей джобы
+    defaults:
+      run:
+        working-directory: cypress.Search.Cruise
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,10 +26,7 @@ jobs:
         id: cypress
         uses: cypress-io/github-action@v6
         with:
-          # ВАЖНО: Указываем ту папку, в которой лежит package.json
-          # Судя по логам, это первая папка в твоем репозитории
-          working-directory: cypress.Search.Cruise
-          # Если проект вложен еще глубже, Cypress найдет его через параметр project
+          # Указываем путь к папке с cypress.config.js относительно working-directory
           project: ./cypress.Search.Cruise
           spec: cypress/e2e/monitoring/cruise.cy.js
           browser: chrome
@@ -36,7 +38,7 @@ jobs:
         id: extract_results
         if: always()
         run: |
-          # Используем поиск по всему дереву, чтобы найти файл с результатом
+          # Ищем файл в текущей директории и подпапках
           FILE=$(find . -name "offers_count.txt" | head -n 1)
           if [ -n "$FILE" ] && [ -f "$FILE" ]; then
             COUNT=$(cat "$FILE")
