@@ -21,7 +21,9 @@ jobs:
         id: cypress
         uses: cypress-io/github-action@v6
         with:
-          # Укажите актуальный путь к вашему тесту для круизов
+          # ВАЖНО: Указываем папку проекта, если она вложена (как было в ЖД)
+          working-directory: cypress.Search.Cruise
+          project: ./cypress.Search.Cruise
           spec: cypress/e2e/monitoring/cruise.cy.js
           browser: chrome
         env:
@@ -32,8 +34,10 @@ jobs:
         id: extract_results
         if: always()
         run: |
-          if [ -f offers_count.txt ]; then
-            COUNT=$(cat offers_count.txt)
+          # Ищем файл во всех папках
+          FILE=$(find . -name "offers_count.txt" | head -n 1)
+          if [ -n "$FILE" ] && [ -f "$FILE" ]; then
+            COUNT=$(cat "$FILE")
             echo "count=$COUNT" >> $GITHUB_OUTPUT
           else
             echo "count=0" >> $GITHUB_OUTPUT
