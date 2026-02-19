@@ -21,20 +21,19 @@ jobs:
         id: cypress
         uses: cypress-io/github-action@v6
         with:
-          # ВАЖНО: Указываем папку проекта, если она вложена (как было в ЖД)
-          working-directory: cypress.Search.Cruise
+          # Указываем путь к папке проекта относительно корня репозитория
           project: ./cypress.Search.Cruise
           spec: cypress/e2e/monitoring/cruise.cy.js
           browser: chrome
         env:
-          LOGIN_EMAIL: ${{ secrets.LOGIN_EMAIL }}
-          LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
+          CYPRESS_LOGIN_EMAIL: ${{ secrets.LOGIN_EMAIL }}
+          CYPRESS_LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
 
       - name: Extract Results
         id: extract_results
         if: always()
         run: |
-          # Ищем файл во всех папках
+          # Универсальный поиск файла во всех подпапках
           FILE=$(find . -name "offers_count.txt" | head -n 1)
           if [ -n "$FILE" ] && [ -f "$FILE" ]; then
             COUNT=$(cat "$FILE")
