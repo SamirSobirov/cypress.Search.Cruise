@@ -61,18 +61,16 @@ describe('Cruise Product', () => {
 
     // 6. ПРОВЕРКА РЕЗУЛЬТАТОВ (ИСПРАВЛЕНО: .cruise-card)
     // Ждем сначала ответ от сервера
-  // ... после клика на поиск
-    
-    // Ждем ответ от сервера (API Круизов)
     cy.wait('@cruiseSearch', { timeout: 60000 }).then((xhr) => {
         expect(xhr.response.statusCode).to.be.oneOf([200, 201]);
     });
 
-    // Ищем карточки круизов (cruise-card)
-    cy.get('.cruise-card', { timeout: 20000 })
+    // Теперь проверяем физическое наличие карточек круизов
+    cy.get('.cruise-card', { timeout: 30000 })
       .should('be.visible')
       .then(($items) => {
         const count = $items.length;
+        cy.log(`Найдено круизов: ${count}`);
         cy.writeFile('offers_count.txt', count.toString());
         expect(count).to.be.greaterThan(0);
       });

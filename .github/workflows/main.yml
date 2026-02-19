@@ -21,19 +21,21 @@ jobs:
         id: cypress
         uses: cypress-io/github-action@v6
         with:
-          # Указываем путь к папке проекта относительно корня репозитория
+          # Указываем корень, где лежит ПЕРВЫЙ package.json
+          working-directory: cypress.Search.Cruise
+          # Указываем подпапку самого проекта Cypress
           project: ./cypress.Search.Cruise
           spec: cypress/e2e/monitoring/cruise.cy.js
           browser: chrome
         env:
-          CYPRESS_LOGIN_EMAIL: ${{ secrets.LOGIN_EMAIL }}
-          CYPRESS_LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
+          LOGIN_EMAIL: ${{ secrets.LOGIN_EMAIL }}
+          LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
 
       - name: Extract Results
         id: extract_results
         if: always()
         run: |
-          # Универсальный поиск файла во всех подпапках
+          # Ищем файл во всем репозитории, где бы он ни создался
           FILE=$(find . -name "offers_count.txt" | head -n 1)
           if [ -n "$FILE" ] && [ -f "$FILE" ]; then
             COUNT=$(cat "$FILE")
@@ -53,7 +55,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }} 
           format: markdown
           message: |
-            ${{ github.event.inputs.user_chat_id != '' && '👤 **Manual Testing**' || '📢 **Hourly Testing**' }}
+            ${{ (github.event.inputs.user_chat_id != '') && '👤 **Manual Testing**' || '📢 **Hourly Testing**' }}
             
             🚢 **Cruise Search Result**
             **Status:** ${{ steps.cypress.outcome == 'success' && '✅ Success' || '❌ Error' }}
