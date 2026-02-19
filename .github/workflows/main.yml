@@ -21,9 +21,10 @@ jobs:
         id: cypress
         uses: cypress-io/github-action@v6
         with:
-          # Указываем корень, где лежит ПЕРВЫЙ package.json
+          # ВАЖНО: Указываем ту папку, в которой лежит package.json
+          # Судя по логам, это первая папка в твоем репозитории
           working-directory: cypress.Search.Cruise
-          # Указываем подпапку самого проекта Cypress
+          # Если проект вложен еще глубже, Cypress найдет его через параметр project
           project: ./cypress.Search.Cruise
           spec: cypress/e2e/monitoring/cruise.cy.js
           browser: chrome
@@ -35,7 +36,7 @@ jobs:
         id: extract_results
         if: always()
         run: |
-          # Ищем файл во всем репозитории, где бы он ни создался
+          # Используем поиск по всему дереву, чтобы найти файл с результатом
           FILE=$(find . -name "offers_count.txt" | head -n 1)
           if [ -n "$FILE" ] && [ -f "$FILE" ]; then
             COUNT=$(cat "$FILE")
@@ -55,7 +56,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }} 
           format: markdown
           message: |
-            ${{ (github.event.inputs.user_chat_id != '') && '👤 **Manual Testing**' || '📢 **Hourly Testing**' }}
+            ${{ github.event.inputs.user_chat_id != '' && '👤 **Manual Testing**' || '📢 **Hourly Testing**' }}
             
             🚢 **Cruise Search Result**
             **Status:** ${{ steps.cypress.outcome == 'success' && '✅ Success' || '❌ Error' }}

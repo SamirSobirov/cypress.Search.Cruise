@@ -2,7 +2,6 @@ describe('Cruise Product', () => {
   it('Search Flow - Cruises', () => {
     cy.viewport(1280, 800);
     
-    // Перехватываем API поиска (проверь эндпоинт в Network, если не сработает)
     cy.intercept('POST', '**/content/offers/**').as('cruiseSearch');
 
     // 1. АВТОРИЗАЦИЯ
@@ -59,13 +58,11 @@ describe('Cruise Product', () => {
     // 5. ПОИСК
     cy.get('button.easy-button.p-button-icon-only').click({ force: true });
 
-    // 6. ПРОВЕРКА РЕЗУЛЬТАТОВ (ИСПРАВЛЕНО: .cruise-card)
-    // Ждем сначала ответ от сервера
+    // 6. ПРОВЕРКА РЕЗУЛЬТАТОВ 
     cy.wait('@cruiseSearch', { timeout: 60000 }).then((xhr) => {
         expect(xhr.response.statusCode).to.be.oneOf([200, 201]);
     });
 
-    // Теперь проверяем физическое наличие карточек круизов
     cy.get('.cruise-card', { timeout: 30000 })
       .should('be.visible')
       .then(($items) => {
